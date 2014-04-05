@@ -283,6 +283,9 @@ public class MainActivity extends Activity {
                 String message = new String(readBuf, 0, msg.arg1);
                 log(message);
                 log("--- end of message ---");
+
+                // and send something back
+                connectedThread.write("Here's a reply!".getBytes());
                 break;
             default:
                 log("Another message type: " + msg.what);
