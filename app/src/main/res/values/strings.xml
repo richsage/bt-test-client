@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- this is the same UUID as in the controller -->
+    <string name="uuid">bffd6230-bcea-11e3-b1b6-0800200c9a66</string>
+
+    <string name="app_name">Client</string>
+
+    <string name="action_settings">Settings</string>
+
+</resources>
