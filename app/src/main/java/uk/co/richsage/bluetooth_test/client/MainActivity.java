@@ -4,7 +4,10 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -29,6 +32,29 @@ public class MainActivity extends Activity {
     private AcceptThread acceptThread;
     private ConnectedThread connectedThread;
 
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action)) {
+                log("Scan mode changed!");
+                Bundle extras = intent.getExtras();
+                int scanMode = extras.getInt(BluetoothAdapter.EXTRA_SCAN_MODE);
+                switch (scanMode) {
+                    case BluetoothAdapter.SCAN_MODE_NONE:
+                        log("New scan mode: SCAN_MODE_NONE");
+                        break;
+                    case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
+                        log("New scan mode: SCAN_MODE_CONNECTABLE");
+                        break;
+                    case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
+                        log("New scan mode: SCAN_MODE_CONNECTABLE_DISCOVERABLE");
+                        break;
+                }
+            }
+        }
+    };
+
     private void log(String text) {
         TextView textView = (TextView) findViewById(R.id.textView2);
         textView.append(text + "\n");
@@ -51,12 +77,16 @@ public class MainActivity extends Activity {
         super.onStart();
 
         if (!bluetoothAdapter.isEnabled()) {
+            // Use enable() instead if you want to do it without prompting the user
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             log("Turn BT on");
         } else {
             log("BT is on already");
         }
+
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
+        registerReceiver(mReceiver, filter);
 
         // Make this device always discoverable via Bluetooth
         Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
@@ -173,7 +203,10 @@ public class MainActivity extends Activity {
         }
 
         private void manageConnectedSocket(BluetoothSocket socket) {
-            connectedThread = null;
+            if (connectedThread != null) {
+                connectedThread.cancel();
+                connectedThread = null;
+            }
             connectedThread = new ConnectedThread(socket);
             connectedThread.start();
         }
