@@ -94,10 +94,14 @@ public class MainActivity extends Activity {
         startActivity(discoverableIntent);
         log("Requested indefinite discovery");
 
-        // Start threads
-        log("Starting server thread...");
-        acceptThread = new AcceptThread();
-        acceptThread.start();
+        if (bluetoothAdapter.isEnabled()) {
+            startThreads();
+        }
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -126,8 +130,17 @@ public class MainActivity extends Activity {
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode != RESULT_OK) {
                 android.util.Log.d("Client", "EEK! Bluetooth not enabled");
+            } else {
+                // Start threads
+                startThreads();
             }
         }
+    }
+
+    private void startThreads() {
+        log("Starting server thread...");
+        acceptThread = new AcceptThread();
+        acceptThread.start();
     }
 
     /**
